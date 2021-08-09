@@ -1,3 +1,5 @@
+It's still in the development stage, I hope it can crack the nft plot. 
+---
 7. Create a venv (different from chia-rosechain) and start the pool server using the following commands:
 
 ```
