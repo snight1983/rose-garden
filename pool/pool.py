@@ -340,7 +340,7 @@ class Pool:
                         if lEnd > 100:
                             lEnd = 100
 
-                        while lbeg < lLen:
+                        while lbeg <= lLen:
                            # print("send Begin:End ----------------", lbeg, lEnd)
                             spend_bundle = await create_absorb_transaction(
                                 self.node_rpc_client,
