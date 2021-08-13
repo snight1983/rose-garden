@@ -261,7 +261,6 @@ class Pool:
                     continue
 
                 scan_phs: List[bytes32] = list(self.scan_p2_singleton_puzzle_hashes)
-                print("++++++ scan_phs list:", scan_phs)
                 peak_height = self.blockchain_state["peak"].height
 
                 # Only get puzzle hashes with a certain number of confirmations or more, to avoid reorg issues
@@ -270,7 +269,6 @@ class Pool:
                     include_spent_coins=False,
                     start_height=self.scan_start_height,
                 )
-                print("++++++ coin_records list:", coin_records)
 
                 self.log.info(
                     f"Scanning for block rewards from {self.scan_start_height} to {peak_height}. "
@@ -331,24 +329,40 @@ class Pool:
                                 f"claim rewards"
                             )
                             continue
-
-                        spend_bundle = await create_absorb_transaction(
-                            self.node_rpc_client,
-                            rec,
-                            self.blockchain_state["peak"].height,
-                            ph_to_coins[rec.p2_singleton_puzzle_hash],
-                            self.constants.GENESIS_CHALLENGE,
-                        )
-
-                        if spend_bundle is None:
+                        ptcList = ph_to_coins[rec.p2_singleton_puzzle_hash]
+                        # The world of local tyrants, you don’t understand : )
+                        lLen = len(ptcList)
+                        #print("total len:", rec.p2_singleton_puzzle_hash.hex(), lLen)
+                        lbeg = 0
+                        lEnd = lLen
+                        if lLen <= 0:
                             continue
+                        if lEnd > 100:
+                            lEnd = 100
 
-                        push_tx_response: Dict = await self.node_rpc_client.push_tx(spend_bundle)
-                        if push_tx_response["status"] == "SUCCESS":
-                            # TODO(pool): save transaction in records
-                            self.log.info(f"Submitted transaction successfully: {spend_bundle.name().hex()}")
-                        else:
-                            self.log.error(f"Error submitting transaction: {push_tx_response}")
+                        while lbeg < lLen:
+                           # print("send Begin:End ----------------", lbeg, lEnd)
+                            spend_bundle = await create_absorb_transaction(
+                                self.node_rpc_client,
+                                rec,
+                                self.blockchain_state["peak"].height,
+                                ptcList[lbeg:lEnd],
+                                self.constants.GENESIS_CHALLENGE,
+                            )
+                            lbeg = lEnd
+                            lEnd += 100
+                            if lEnd > lLen:
+                                lEnd = lLen
+                            if spend_bundle is None:
+                                break
+
+                            push_tx_response: Dict = await self.node_rpc_client.push_tx(spend_bundle)
+                            if push_tx_response["status"] == "SUCCESS":
+                                # TODO(pool): save transaction in records
+                                self.log.info(f"Submitted transaction successfully: {spend_bundle.name().hex()}")
+                            else:
+                                self.log.error(f"Error submitting transaction: {push_tx_response}")
+
                 await asyncio.sleep(self.collect_pool_rewards_interval)
             except asyncio.CancelledError:
                 self.log.info("Cancelled collect_pool_rewards_loop, closing")
