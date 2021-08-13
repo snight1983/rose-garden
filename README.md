@@ -25,3 +25,16 @@ sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
 ```
 screen -r rose
 ```
+# Check if the pool is running 
+```
+ubuntu@VM-0-9-ubuntu:~$ ps -aux| grep pool
+root      970672  0.0  0.1   9660  4560 pts/3    S+   18:17   0:00 sudo CHIA_ROOT=/root/.chiarose/mainnet ./venv/bin/python -m pool
+root      970673  0.5  1.3 226028 55648 pts/3    Sl+  18:17   0:02 ./venv/bin/python -m pool
+ubuntu    972010  0.0  0.0   6300   736 pts/1    S+   18:25   0:00 grep --color=auto pool
+ubuntu@VM-0-9-ubuntu:~$ 
+
+
+
+orBrowser access   http://youip or url:port (18520)
+```
+
