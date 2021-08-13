@@ -1,16 +1,16 @@
 pool_info:
-  default_res: rose Garden
-  name: The Reference Pool
+  default_res: Rose Garden
+  name: Rose Garden
   logo_url: https://www.chia.net/img/chia_logo.svg
-  description: (example) The Reference Pool allows you to pool with low fees, paying out daily using Chia.
-welcome_message: "Welcome to rose Garden!"
+  description: (example) Rose Garden allows you to pool with low fees, paying out daily using XCR.
+welcome_message: 'Welcome to rose garden!'
 pool_fee: 0.01
 pool_url: http://10.0.0.45:18520
 min_difficulty: 10
 default_difficulty: 10
-default_target_address: txch1h8vdax8vtspx7yt8kz6cwu2awymlgwmdr4qts8v643kusd2lmc5qht7ltq
-pool_fee_address: txch1jhydnk47xl40jn3pgwjd708uk2wqzqexagy9xxjcwt2qeaumv3fqcrw6e2
-wallet_fingerprint: 3967641394
+default_target_address: xcr1jzjznzj8yt3tux5pph4l0gg7eep92upvthv8jfdcdndlwg4q9xlq4uv63y
+pool_fee_address: xcr1jzjznzj8yt3tux5pph4l0gg7eep92upvthv8jfdcdndlwg4q9xlq4uv63y
+wallet_fingerprint: 1136084163
 authentication_token_timeout: 5
 wallet_id: 1
 node_rpc_port: 8025
@@ -37,3 +37,8 @@ server:
   server_use_ssl: false
   server_ssl_crt: config/ssl/domain/domain_srv.crt
   server_ssl_key: config/ssl/domain/domain_srv.key
+poollimit:
+  enable_whitelist: true
+  white_list:
+    'xcr1lh5k8uvqxvtdutauxpust8d4fycl4h7r27tqvmhz2ekhezvqkevsk7wxjk': 0
+    '0x847f8da6eef5dc618b358ce15c07e7d103eef27aada2df45919b6f48eddbcb70b54796d8f679ab9972ddbead0547f8a6': 100

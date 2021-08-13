@@ -24,7 +24,7 @@ from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.coin_record import CoinRecord
 from chia.types.coin_spend import CoinSpend
-from chia.util.bech32m import decode_puzzle_hash
+from chia.util.bech32m import decode_puzzle_hash, bech32_decode
 from chia.consensus.constants import ConsensusConstants
 from chia.util.ints import uint8, uint16, uint32, uint64
 from chia.util.byte_types import hexstr_to_bytes
@@ -49,6 +49,9 @@ from .store.abstract import AbstractPoolStore
 from .store.sqlite_store import SqlitePoolStore
 from .record import FarmerRecord
 from .util import error_dict, RequestMetadata
+
+import os
+import yaml
 
 
 class Pool:
@@ -168,11 +171,16 @@ class Pool:
         self.create_payment_loop_task: Optional[asyncio.Task] = None
         self.submit_payment_loop_task: Optional[asyncio.Task] = None
         self.get_peak_loop_task: Optional[asyncio.Task] = None
+        self.whitelist_loop_task: Optional[asyncio.Task] = None
 
         self.node_rpc_client: Optional[FullNodeRpcClient] = None
         self.node_rpc_port = pool_config["node_rpc_port"]
         self.wallet_rpc_client: Optional[WalletRpcClient] = None
         self.wallet_rpc_port = pool_config["wallet_rpc_port"]
+        self.proofmaping: Dict[bytes, bytes] = {}
+        self.enablewlist = pool_config["poollimit"]["enable_whitelist"]
+        self.wlist_contract: Dict[bytes, int] = {}
+        self.whitelist: Set[bytes] = set()
 
     async def start(self):
         await self.store.connect()
@@ -200,6 +208,7 @@ class Pool:
         self.create_payment_loop_task = asyncio.create_task(self.create_payment_loop())
         self.submit_payment_loop_task = asyncio.create_task(self.submit_payment_loop())
         self.get_peak_loop_task = asyncio.create_task(self.get_peak_loop())
+        self.whitelist_loop_task = asyncio.create_task(self.whitelist_loop())
 
         self.pending_payments = asyncio.Queue()
 
@@ -214,6 +223,8 @@ class Pool:
             self.submit_payment_loop_task.cancel()
         if self.get_peak_loop_task is not None:
             self.get_peak_loop_task.cancel()
+        if self.whitelist_loop_task is not None:
+            self.whitelist_loop_task.cancel()
 
         self.wallet_rpc_client.close()
         await self.wallet_rpc_client.await_closed()
@@ -250,6 +261,7 @@ class Pool:
                     continue
 
                 scan_phs: List[bytes32] = list(self.scan_p2_singleton_puzzle_hashes)
+                print("++++++ scan_phs list:", scan_phs)
                 peak_height = self.blockchain_state["peak"].height
 
                 # Only get puzzle hashes with a certain number of confirmations or more, to avoid reorg issues
@@ -258,6 +270,8 @@ class Pool:
                     include_spent_coins=False,
                     start_height=self.scan_start_height,
                 )
+                print("++++++ coin_records list:", coin_records)
+
                 self.log.info(
                     f"Scanning for block rewards from {self.scan_start_height} to {peak_height}. "
                     f"Found: {len(coin_records)}"
@@ -294,9 +308,9 @@ class Pool:
                         not_claimable_amounts += ph_to_amounts[rec.p2_singleton_puzzle_hash]
 
                 if len(coin_records) > 0:
-                    self.log.info(f"Claimable amount: {claimable_amounts / (10**12)}")
-                    self.log.info(f"Not claimable amount: {not_claimable_amounts / (10**12)}")
-                    self.log.info(f"Not buried amounts: {not_buried_amounts / (10**12)}")
+                    self.log.info(f"Claimable amount: {claimable_amounts / (10**9)}")
+                    self.log.info(f"Not claimable amount: {not_claimable_amounts / (10**9)}")
+                    self.log.info(f"Not buried amounts: {not_buried_amounts / (10**9)}")
 
                 for rec in farmer_records:
                     if rec.is_pool_member:
@@ -382,9 +396,9 @@ class Pool:
                     self.log.info(f"Do not have enough funds to distribute: {total_amount_claimed}, skipping payout")
                     continue
 
-                self.log.info(f"Total amount claimed: {total_amount_claimed / (10 ** 12)}")
-                self.log.info(f"Pool coin amount (includes blockchain fee) {pool_coin_amount  / (10 ** 12)}")
-                self.log.info(f"Total amount to distribute: {amount_to_distribute  / (10 ** 12)}")
+                self.log.info(f"Total amount claimed: {total_amount_claimed / (10 ** 9)}")
+                self.log.info(f"Pool coin amount (includes blockchain fee) {pool_coin_amount  / (10 ** 9)}")
+                self.log.info(f"Total amount to distribute: {amount_to_distribute  / (10 ** 9)}")
 
                 async with self.store.lock:
                     # Get the points of each farmer, as well as payout instructions. Here a chia address is used,
@@ -550,7 +564,6 @@ class Pool:
                     (partial.payload.proof_of_space.pool_contract_puzzle_hash == farmer_record.p2_singleton_puzzle_hash) or (
                         partial.payload.additional_rose_contract == farmer_record.p2_singleton_puzzle_hash)
                 )
-
                 if farmer_record.is_pool_member:
                     await self.store.add_partial(partial.payload.launcher_id, uint64(int(time.time())), points_received)
                     self.log.info(
@@ -774,6 +787,28 @@ class Pool:
 
         return buried_singleton_tip, buried_singleton_tip_state, is_pool_member
 
+    async def whitelist_loop(self):
+        while True:
+            with open(os.getcwd() + "/config.yaml") as f:
+                config: Dict = yaml.safe_load(f)
+                wlist_contract: Dict[bytes, int] = {}
+                self.enablewlist = config["poollimit"]["enable_whitelist"]
+                if self.enablewlist is True:
+                    wlist = config["poollimit"]["white_list"]
+                    for k in wlist:
+                        if k is not None:
+                            hrpgot, data = bech32_decode(k)
+                            if data is not None:
+                                contract = decode_puzzle_hash(k)
+                                if contract is not None:
+                                    wlist_contract[bytes(contract)] = wlist[k]
+                            else:
+                                if len(k) > 40:
+                                    pk_bytes = hexstr_to_bytes(k)
+                                    wlist_contract[pk_bytes] = wlist[k]
+                    self.wlist_contract = wlist_contract
+            await asyncio.sleep(600)
+
     async def process_partial(
         self,
         partial: PostPartialRequest,
@@ -796,6 +831,33 @@ class Pool:
                 PoolErrorCode.INVALID_P2_SINGLETON_PUZZLE_HASH,
                 f"Invalid pool contract puzzle hash {partial.payload.proof_of_space.pool_contract_puzzle_hash}",
             )
+
+        if (partial.payload.proof_of_space.pool_contract_puzzle_hash != farmer_record.p2_singleton_puzzle_hash) and (partial.payload.additional_rose_contract == farmer_record.p2_singleton_puzzle_hash):
+            proofKey = partial.payload.proof_of_space.pool_contract_puzzle_hash
+            if proofKey is None:
+                proofKey = partial.payload.proof_of_space.pool_public_key
+                if proofKey is None:
+                    return error_dict(
+                        PoolErrorCode.INVALID_P2_SINGLETON_PUZZLE_HASH,
+                        f"The service has not been subscribed to this user  {proofKey}",
+                    )
+
+            if self.enablewlist == True:
+                if bytes(proofKey) not in self.wlist_contract:
+                    return error_dict(
+                        PoolErrorCode.INVALID_P2_SINGLETON_PUZZLE_HASH,
+                        f"The service has not been subscribed to this user {proofKey}",
+                    )
+
+            if bytes(proofKey) in self.proofmaping:
+                if self.proofmaping[bytes(proofKey)] != bytes(partial.payload.launcher_id):
+                    self.proofmaping[bytes(proofKey)] = bytes(partial.payload.launcher_id)
+                    return error_dict(
+                        PoolErrorCode.INVALID_P2_SINGLETON_PUZZLE_HASH,
+                        f"Protocol replacement {proofKey}",
+                    )
+            else:
+                self.proofmaping[bytes(proofKey)] = bytes(partial.payload.launcher_id)
 
         async def get_signage_point_or_eos():
             if partial.payload.end_of_sub_slot:

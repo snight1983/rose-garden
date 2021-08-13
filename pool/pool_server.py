@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from math import dist
 import os
 import ssl
 import time
@@ -72,6 +73,7 @@ class PoolServer:
         self.pool_config = pool_config
         self.host = pool_config["server"]["server_host"]
         self.port = int(pool_config["server"]["server_port"])
+        self.proofmaping: Dict[bytes, bytes] = {}
 
     async def start(self):
         await self.pool.start()
