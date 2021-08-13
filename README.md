@@ -21,3 +21,7 @@ cd rose-garden
 source ./venv/bin/activate
 sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
 ```
+# Open the Rose console and view the simple way to run the pool 
+```
+screen -r rose
+```
