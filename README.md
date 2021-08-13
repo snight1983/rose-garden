@@ -37,3 +37,5 @@ ubuntu@VM-0-9-ubuntu:~$
 or Access via browser eg: http://11x.1xx.xx0.1x0:xx
 ```
 
+
+![image](https://github.com/MaiEmily/map/blob/master/public/image/20190528145810708.png)
