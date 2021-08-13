@@ -35,6 +35,6 @@ ubuntu@VM-0-9-ubuntu:~$
 
 
 
-orBrowser access   http://youip or url:port (18520)
+or Access via browser eg: http://11x.1xx.xx0.1x0:xx
 ```
 
