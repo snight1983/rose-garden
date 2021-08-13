@@ -41,3 +41,11 @@ or Access via browser eg: http://11x.1xx.xx0.1x0:xx
 ![image](https://github.com/snight1983/rose-garden/blob/master/images/pool1.png)
 ![image](https://github.com/snight1983/rose-garden/blob/master/images/pool2.png)
 
+
+# 6. Support ability  
+
+Chia's new plot can be added to the rose mining pool (using chia contract P chart)
+
+Chia old plot can join the rose mining pool (using public key P)
+
+Rose new plot can be added to the rose mining pool (using rose contract P chart ,Not recommended, this will result in only 1/8 of Chia’s income ) 
