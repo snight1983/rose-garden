@@ -13,4 +13,11 @@ source ./venv/bin/activate
 pip install ../chia-rosechain/ 
 sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
 ```
- 
+# A simple way to close the console and keep the pool running 
+---
+```
+screen -S rose
+cd rose-garden
+source ./venv/bin/activate
+sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
+```
