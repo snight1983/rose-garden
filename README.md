@@ -3,7 +3,8 @@ It's still in the development stage, I hope it can crack the nft plot.
 7. Create a venv (different from chia-rosechain) and start the pool server using the following commands:
 
 ```
-https://github.com/snight1983/rose-garden.git
+git clone https://github.com/snight1983/chia-rosechain.git
+git clone https://github.com/snight1983/rose-garden.git
 
 cd rose-garden
 python3 -m venv ./venv
