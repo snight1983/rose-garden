@@ -36,6 +36,8 @@ ubuntu@VM-0-9-ubuntu:~$
 
 or Access via browser eg: http://11x.1xx.xx0.1x0:xx
 ```
+# 5. Beta preview 
 
+![image](https://github.com/snight1983/rose-garden/blob/master/images/pool1.png)
+![image](https://github.com/snight1983/rose-garden/blob/master/images/pool2.png)
 
-![image](https://github.com/MaiEmily/map/blob/master/public/image/20190528145810708.png)
