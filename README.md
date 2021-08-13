@@ -1,4 +1,4 @@
-It's still in the development stage, I hope it can crack the nft plot. 
+Environment ubuntu20 
 ---
 
 
