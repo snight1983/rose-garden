@@ -917,7 +917,7 @@ class Pool:
 
         current_difficulty = farmer_record.difficulty
         required_iters: uint64 = calculate_iterations_quality(
-            self.constants.DIFFICULTY_CONSTANT_FACTOR,
+            self.constants.DIFFICULTY_CONSTANT_FACTOR * (2**38),
             quality_string,
             partial.payload.proof_of_space.size,
             current_difficulty,
