@@ -1,6 +1,4 @@
-Environment ubuntu20 
----
-
+# 1. Environment ubuntu20 The pooled client has not been updated yet. Rose needs a hard fork, which is painful: { 
 
 ```
 git clone https://github.com/snight1983/chia-rosechain.git
@@ -13,19 +11,20 @@ source ./venv/bin/activate
 pip install ../chia-rosechain/ 
 sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
 ```
-# A simple way to close the console and keep the pool running 
----
+# 2. A simple way to close the console and keep the pool running 
+
+
 ```
 screen -S rose
 cd rose-garden
 source ./venv/bin/activate
 sudo CHIA_ROOT="/your/home/dir/.chiarose/mainnet" ./venv/bin/python -m pool
 ```
-# Open the Rose console and view the simple way to run the pool 
+# 3. Open the Rose console and view the simple way to run the pool 
 ```
 screen -r rose
 ```
-# Check if the pool is running 
+# 4. Check if the pool is running 
 ```
 ubuntu@VM-0-9-ubuntu:~$ ps -aux| grep pool
 root      970672  0.0  0.1   9660  4560 pts/3    S+   18:17   0:00 sudo CHIA_ROOT=/root/.chiarose/mainnet ./venv/bin/python -m pool
